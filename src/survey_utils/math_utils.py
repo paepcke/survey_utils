@@ -1,12 +1,8 @@
-from collections import OrderedDict
-import csv
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram
-import sys
 
 #import pandas
 import numpy as np
-
 
 #-------------------------
 # replacZerosNparray()
