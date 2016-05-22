@@ -1,0 +1,5 @@
+userId,question,questionType,timeAdded,answer
+10,DOB,pullDown,Jun2010,1983
+10,gender,radio,May2011,F
+20,DOB,pullDown,Jun2010,1980
+20,gender,radio,May2011,M

@@ -3,9 +3,14 @@ Created on May 20, 2016
 
 @author: paepcke
 '''
+import argparse
 from collections import OrderedDict
 import csv
+import os
 import sys
+
+from ordered_set import OrderedSet
+
 
 class OutMethod():
     '''
@@ -150,8 +155,13 @@ class TableShaper(object):
         
         if new_col_names_col is not None and type(new_col_names_col) != str:
             raise ValueError('New-column prefix must be a string, was %s' % new_col_names_col)
-        else:
-            self.new_col_names_col = new_col_names_col
+        self.new_col_names_col = new_col_names_col
+        if new_col_names_col is None:
+            # No col specified to provide column headers
+            # for new columns:
+            # String for creating names for the new columns.
+            # The string is prefixed to 1,2,3,...: 'v' for 'value':
+            self.new_col_prefix = 'v'
         
         if constant_cols is not None:
             if type(constant_cols) != list:
@@ -160,13 +170,6 @@ class TableShaper(object):
         else:
             # constant_cols is None:
             self.constant_cols = []
-        
-        if new_col_names_col is None:
-            # String for creating names for the new columns.
-            # The string is prefixed to 1,2,3,...: 'v' for 'value':
-            self.new_col_prefix = 'v'
-        else:
-            self.new_col_names_col = new_col_names_col
         
         self.out_method = out_method
         self.col_name_unfold_values = col_name_unfold_values
@@ -178,13 +181,17 @@ class TableShaper(object):
         self.const_col_dict = OrderedDict()
         
         # Place to hold names for new columns:
-        self.new_col_names = []
+        self.new_col_names = OrderedSet()
         
         try:
             if type(in_path_or_2d_array) == str:
-                reader = csv.reader(open(in_path_or_2d_array, 'r'), delimiter=',') 
+                # Get in-table from a file:
+                in_fd = open(in_path_or_2d_array, 'r')
+                reader = csv.reader(in_fd, delimiter=',') 
             else:
+                # Get in-table from a 2d array:
                 reader = iter(in_path_or_2d_array)
+                in_fd = None
     
             # Look at in-table's header line and get various
             # constants initialized:
@@ -193,22 +200,22 @@ class TableShaper(object):
             
             # Read the rows and create in-memory representation
             # of transformed structure:
-            for (row_num, row) in enumerate(reader):
+            for row in reader:
                 
                 # Field value of the unfold-column that is key of rows in new tbl
                 # e.g. 'DOB' or 'gender':
-                unfold_key = row[self.col_indx_to_unfold]
+                unfold_col_value = row[self.col_indx_to_unfold]
                 
-                # Encountered this key (i.e. unfold-col value) before?
+                # Encountered thiS key (i.e. unfold-col value) before?
                 # If not, init with empty array of that key's value for
                 # the subject who is represented by this row.
                 # We'll end up with this: {'DOB' : ['1983', '1980'], 'gender' : ['M','F']}:
-                collected_values = self.unfolded_values_dict.get(unfold_key, [])
+                collected_values = self.unfolded_values_dict.get(unfold_col_value, [])
                 
                 # Value of this unfold-key in this row (e.g. '1983' or 'M'):
                 unfold_value = row[self.col_indx_of_values]
                 collected_values.append(unfold_value)
-                self.unfolded_values_dict[unfold_key] = collected_values
+                self.unfolded_values_dict[unfold_col_value] = collected_values
                 
                 # Now take care of constant columns.
                 # For each unique value of the column that
@@ -240,12 +247,21 @@ class TableShaper(object):
                     
                     # Is this column constant for a given pivot column value?
                     if col_name in self.constant_cols:
-                        col_constant = self.const_col_dict.get(const_col_key, None)
-                        # If it's constant for the fold-pivot, and we noted its 
-                        # value earlier, compare to ensure that they are really
-                        # equal:
+                        
+                        # Dict: 
+                        #    {(<unfold-col-value, constant_col_name) : constant_col_value}
+                        # I.e. for each of the values in the column to be unfolded,
+                        # each constant column has the same value, else something is wrong.
+                        # Check whether we already encountered the value in the current
+                        # row's unfold-value; if not init, if yes, ensure that this 
+                        # constant-col's value in the current row is the same as in 
+                        # other rows in which the unfold-value is the same as in this row:
+                        
+                        const_values_dict_key = (unfold_col_value,col_name)
+                        col_constant = self.const_col_dict.get(const_values_dict_key, None)
+                        
                         if col_constant is None:
-                            self.const_col_dict[const_col_key] = row[col_num]
+                            self.const_col_dict[const_values_dict_key] = col_value
                         else:
                             # Saw value for this column and pivot value earlier:
                             if col_value != col_constant:
@@ -256,11 +272,11 @@ class TableShaper(object):
                     # names of new columns?
                     
                     if self.new_col_names_col is not None:
-                        self.new_col_names.append(row[self.new_cols_col_indx])
+                        self.new_col_names.add(row[self.new_cols_col_indx])
                      
         finally:
             if type(in_path_or_2d_array) == str:
-                reader.close()
+                in_fd.close()
                                     
         return(self.output_result())
 
@@ -281,15 +297,17 @@ class TableShaper(object):
             num_unfolded_values = len(self.unfolded_values_dict[unfolded_value])
             unfolded_max_len = max(num_unfolded_values, unfolded_max_len) # Header: start with the column name that was unfolded:
         
-        header = [self.col_name_to_unfold] # Continue with any columns that were constant for
+        header = [self.col_name_to_unfold] 
+        # Continue with any columns that were constant for
         # any given unfold-value:
-        header.extend(self.const_col_dict.keys())
+        header.extend(self.constant_cols)
         # Finally: invent names for all the unfolded values
         # that are now columns; or the caller specified a
         # self.new_col_names_col, and we accumulated values
         # from that column-name-providing column in self.new_col_names
         if self.new_col_names_col is not None:
-            header.extend(self.new_col_names)
+            for new_col_header in self.new_col_names:
+                header.append(new_col_header)
         else:
             # Invent names for the new columns: v<n>:
             for indx in range(unfolded_max_len):
@@ -303,6 +321,15 @@ class TableShaper(object):
     #----------------- 
     
     def process_in_header_line(self, reader):
+        '''
+        Given a csv- or excel reader that is pointed to
+        table file, read the first row, which is expected
+        to be the table header. Error-check, and return
+        that header. 
+        
+        :param reader: object providing the file-like API
+        :type reader: csv.Reader
+        '''
     
         header = reader.next()
         
@@ -318,10 +345,14 @@ class TableShaper(object):
         else:
             self.new_cols_col_indx = None
         try:
+            # Does the column to be unfolded exist?
+            # in the running example: 'question':
             self.col_indx_to_unfold = header.index(self.col_name_to_unfold)
         except IndexError:
             raise ValueError('The column to unfold (%s) does not appear in the table header (%s)' % (self.col_name_to_unfold, header))
         try:
+            # Does the column with the unfold-values
+            # exist? In the running example: 'answer':
             self.col_indx_of_values = header.index(self.col_name_unfold_values)
         except IndexError:
             raise ValueError('The column of unfold values (%s) does not appear in the table header (%s)' % (self.col_name_unfold_values, header))
@@ -346,17 +377,16 @@ class TableShaper(object):
             else:
                 writer.writerow(header)
             # Each new row is about one of the unfolded values,
-            # like 'question' in the example:
+            # like 'DOB' or 'gender' in the example:
             for unfold_key in self.unfolded_values_dict.keys():
                 new_row = [unfold_key]
                 # Add constant-column values if any:
                 for col_name in self.constant_cols:
                     # The constant-column value for the current
                     # rows value in the column being unfolded is
-                    # kept in self.const_col_dict. The key is 
-                    # the name of the constant column, plus the
-                    # value of the unfolded column in the current row:
-                    const_col_key = col_name+self.unfolded_values_dict[unfold_key]
+                    # kept in self.const_col_dict. Keys are tuples:
+                    # (unfold_col_value, constant_col_name):
+                    const_col_key = (unfold_key, col_name)
                     col_constant = self.const_col_dict[const_col_key]
                     new_row.append(col_constant)
                 
@@ -388,9 +418,41 @@ class TableShaper(object):
         elif out_method == OutMethod.STDOUT:
             fd = sys.stdout
         else:
-            fd = None
+            fd = writer = None
         if fd is not None:
             writer = csv.writer(fd)
         return (fd,writer)
     
+        
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]), formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-c', '--constantCol',
+                        action='append',
+                        default=None,
+                        help='Column(s) to keep; all others except the unfold\n'+\
+                             'column will be discarded. Use as often as needed.')
+    parser.add_argument('-n', '--newColNameCol',
+                        action='store',
+                        default=None,
+                        help="Column that will supply names for new columns \n"+\
+                             "(e.g. 'userId'); if not provided, the new cols \n"+\
+                             "will be 'v1','v2',...")
+    parser.add_argument('table_path',
+                        help='Path to .csv file'
+                        )
+    parser.add_argument('col_to_unfold',
+                        help="Name of column whose values are to be new columns")
+    parser.add_argument('col_of_values',
+                        help="Name of column whose values will be the values in the new columns.")
+    
+    args = parser.parse_args();
+    
+    shaper = TableShaper()
+    shaper.unfold(args.table_path, 
+                  args.col_to_unfold, 
+                  args.col_of_values, 
+                  out_method=OutMethod.STDOUT, 
+                  constant_cols=args.constantCol, 
+                  new_col_names_col=args.newColNameCol)
+
         
