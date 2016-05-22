@@ -31,9 +31,10 @@ class OutMethod():
 
 class TableShaper(object):
 
-#-------------------------
-# unfold()
-#----------------- 
+    #-------------------------
+    # unfold
+    #----------------- 
+
 
     def unfold(self,
                in_path_or_2d_array, 
@@ -101,7 +102,9 @@ class TableShaper(object):
          I.e. the user id values are used as the column headers
          of the new table.
          
-         To have the function behave like an iterator:
+         To have the function behave like an iterator
+         (each item will be an array with one row of the
+          reshaped table):
          
            it = unfold('/tmp/in.csv',
                       col_name_to_unfold='question'
@@ -142,30 +145,40 @@ class TableShaper(object):
         
         if type(col_name_to_unfold) != str:
             raise ValueError('Must name column that is to be unfolded')
+        else:
+            self.col_name_to_unfold = col_name_to_unfold
         
         if new_col_names_col is not None and type(new_col_names_col) != str:
             raise ValueError('New-column prefix must be a string, was %s' % new_col_names_col)
+        else:
+            self.new_col_names_col = new_col_names_col
         
-        if constant_cols is not None and type(constant_cols) != list:
-            raise ValueError('Parameter constant_cols must be None or a list of column names.')
+        if constant_cols is not None:
+            if type(constant_cols) != list:
+                raise ValueError('Parameter constant_cols must be None or a list of column names.')
+            self.constant_cols = constant_cols
         else:
             # constant_cols is None:
-            constant_cols = []
+            self.constant_cols = []
         
         if new_col_names_col is None:
             # String for creating names for the new columns.
             # The string is prefixed to 1,2,3,...: 'v' for 'value':
-            new_col_prefix = 'v'
+            self.new_col_prefix = 'v'
+        else:
+            self.new_col_names_col = new_col_names_col
+        
+        self.out_method = out_method
+        self.col_name_unfold_values = col_name_unfold_values
         
         # Place to accumulated the unfolded values:
-        unfolded_values_dict = OrderedDict()
+        self.unfolded_values_dict = OrderedDict()
         
         # Place to hold the columns that are constant:
-        const_col_dict = OrderedDict()
+        self.const_col_dict = OrderedDict()
         
         # Place to hold names for new columns:
-        new_col_names = []
-        
+        self.new_col_names = []
         
         try:
             if type(in_path_or_2d_array) == str:
@@ -176,49 +189,63 @@ class TableShaper(object):
             # Look at in-table's header line and get various
             # constants initialized:
                     
-            (col_indx_to_unfold, col_indx_of_values, header, new_cols_col_indx) =\
-                self.process_in_header_line(col_name_to_unfold, col_name_unfold_values, new_col_names_col, reader) 
+            self.header = self.process_in_header_line(reader) 
             
             # Read the rows and create in-memory representation
             # of transformed structure:
-            for row in reader:
+            for (row_num, row) in enumerate(reader):
                 
                 # Field value of the unfold-column that is key of rows in new tbl
                 # e.g. 'DOB' or 'gender':
-                unfold_key = row[col_indx_to_unfold]
+                unfold_key = row[self.col_indx_to_unfold]
                 
                 # Encountered this key (i.e. unfold-col value) before?
                 # If not, init with empty array of that key's value for
                 # the subject who is represented by this row.
                 # We'll end up with this: {'DOB' : ['1983', '1980'], 'gender' : ['M','F']}:
-                collected_values = unfolded_values_dict.get(unfold_key, [])
+                collected_values = self.unfolded_values_dict.get(unfold_key, [])
                 
                 # Value of this unfold-key in this row (e.g. '1983' or 'M'):
-                unfold_value = row[col_indx_of_values]
+                unfold_value = row[self.col_indx_of_values]
                 collected_values.append(unfold_value)
-                unfolded_values_dict[unfold_key] = collected_values
+                self.unfolded_values_dict[unfold_key] = collected_values
                 
-                # Now take care of constant columns
-                # and remembering column names that are
-                # based on each row's field value of a
-                # column specified by the caller:
+                # Now take care of constant columns.
+                # For each unique value of the column that
+                # is being unfolded, constant columns must
+                # be unique. Example to end up with:
+                #
+                #    question   questionType   answer1    answer2
+                #    --------------------------------------------
+                #      DOB       pullDown       1980       1983
+                #     gender      radio          F          M
+                #
+                # Cannot have original table contain 'pullDown' for 
+                # some DOB row, and 'radio' for another. This won't
+                # work as an original:
+                #     subject   question answer  questionType
+                #    -----------------------------------------
+                #    subject1    DOB      1980   pullDown
+                #    subject1   gender     F      radio
+                #    subject2    DOB      1983    radio
+                #    subject2   gender     M      radio
+                # 
     
                 for col_num in range(len(row)):
                     try:
-                        col_name = header[col_num]
+                        col_name = self.header[col_num]
                     except IndexError:
-                        raise ValueError('Row %s has more columns than header (%s)' % (col_num, header))
+                        raise ValueError('Row %s has more columns than header (%s)' % (col_num, self.header))
                     col_value = row[col_num]
                     
                     # Is this column constant for a given pivot column value?
-                    if col_name in constant_cols:
-                        const_col_key = col_name+col_name_to_unfold
-                        col_constant = const_col_dict.get(const_col_key, None)
+                    if col_name in self.constant_cols:
+                        col_constant = self.const_col_dict.get(const_col_key, None)
                         # If it's constant for the fold-pivot, and we noted its 
                         # value earlier, compare to ensure that they are really
                         # equal:
                         if col_constant is None:
-                            const_col_dict[const_col_key] = row[col_num]
+                            self.const_col_dict[const_col_key] = row[col_num]
                         else:
                             # Saw value for this column and pivot value earlier:
                             if col_value != col_constant:
@@ -228,91 +255,54 @@ class TableShaper(object):
                     # Are we to use an existing column as source for
                     # names of new columns?
                     
-                    if new_col_names_col is not None:
-                        new_col_names.append(row[new_cols_col_indx])
+                    if self.new_col_names_col is not None:
+                        self.new_col_names.append(row[self.new_cols_col_indx])
                      
         finally:
             if type(in_path_or_2d_array) == str:
                 reader.close()
-                          
+                                    
+        return(self.output_result())
+
+    # ---------------------------------- Private Methods ---------------------
+
+    
+    #-------------------------
+    # create_out_header_row
+    #----------------- 
+    
+    def create_out_header_row(self, header):
+        
         # Create CSV: col_name_to_unfold, constant_cols[0], constant_cols[1], ..., unfolded-values-columns
         # Find the longest row of unfolded values, so that we can pad
         # them with zeroes:
-        
         unfolded_max_len = 0
-        for unfolded_value in unfolded_values_dict.keys():
-            num_unfolded_values = len(unfolded_values_dict[unfolded_value])
-            unfolded_max_len = max(num_unfolded_values, unfolded_max_len)
-            
-        # Do the writing-out:
-        try:
-            (writer, fd) = self.make_writer(out_method)
-                
-            # Header: start with the column name that was unfolded:
-            header = [col_name_to_unfold]
-            
-            # Continue with any columns that were constant for 
-            # any given unfold-value:
-            header.extend(const_col_dict.keys())
-                
-            # Finally: invent names for all the unfolded values
-            # that are now columns; or the caller specified a  
-            # new_col_names_col, and we accumulated values
-            # from that column-name-providing column in new_col_names
-    
-            if new_col_names_col is not None:
-                header.extend(new_col_names)
-            else:
-                # Invent names for the new columns: v<n>:
-                for indx in range(unfolded_max_len):
-                    header.append('%s%s' % (new_col_prefix, indx))
-    
-            if out_method == OutMethod.ITERATOR:
-                self.yield_row(header)
-            else:
-                writer.writerow(header)
-            # Each new row is about one of the unfolded values,
-            # like 'question' in the example:
-            for unfold_key in unfolded_values_dict.keys():
-                new_row = [unfold_key]
-                # Add constant-column values if any:
-                for col_name in constant_cols:
-                    const_col_key = col_name+col_name_to_unfold
-                    col_constant = const_col_dict[const_col_key]
-                    new_row.append(col_constant)
-                
-                
-                unfolded_values = unfolded_values_dict[unfold_key]
-                # Fill short-row vectors with zeros:
-                unfolded_values = unfolded_values + (unfolded_max_len - len(unfolded_values))*[0]
-                new_row.extend(unfolded_values)
-                if out_method == OutMethod.ITERATOR:
-                    self.yield_row(new_row)
-                else:
-                    writer.writerow(new_row)
-        finally:
-            if out_method == OutMethod.ITERATOR:
-                raise StopIteration
-            elif out_method != OutMethod.STDOUT:
-                fd.close()
-                
-    def yield_row(self, row):
-        yield row
-    
-    def make_writer(self, out_method):
-    # Obtain a csv writer object if function is
-    # not called as a generator:
-        if out_method != OutMethod.ITERATOR and out_method != OutMethod.STDOUT:
-            fd = open(out_method, 'w')
-        elif out_method == OutMethod.STDOUT:
-            fd = sys.stdout
+        for unfolded_value in self.unfolded_values_dict.keys():
+            num_unfolded_values = len(self.unfolded_values_dict[unfolded_value])
+            unfolded_max_len = max(num_unfolded_values, unfolded_max_len) # Header: start with the column name that was unfolded:
+        
+        header = [self.col_name_to_unfold] # Continue with any columns that were constant for
+        # any given unfold-value:
+        header.extend(self.const_col_dict.keys())
+        # Finally: invent names for all the unfolded values
+        # that are now columns; or the caller specified a
+        # self.new_col_names_col, and we accumulated values
+        # from that column-name-providing column in self.new_col_names
+        if self.new_col_names_col is not None:
+            header.extend(self.new_col_names)
         else:
-            fd = None
-        if fd is not None:
-            writer = csv.writer(fd)
-        return (writer, fd)
+            # Invent names for the new columns: v<n>:
+            for indx in range(unfolded_max_len):
+                header.append('%s%s' % (self.new_col_prefix, indx))
+        
+        return (header, unfolded_max_len)
+
     
-    def process_in_header_line(self, col_name_to_unfold, col_name_unfold_values, new_col_names_col, reader):
+    #-------------------------
+    # process_in_header_line
+    #----------------- 
+    
+    def process_in_header_line(self, reader):
     
         header = reader.next()
         
@@ -320,34 +310,87 @@ class TableShaper(object):
         # new columns created for the unfolded values,
         # ensure the col exists:
         
-        if new_col_names_col is not None:
+        if self.new_col_names_col is not None:
             try:
-                new_cols_col_indx = header.index(new_col_names_col)
+                self.new_cols_col_indx = header.index(self.new_col_names_col)
             except IndexError:
-                raise ValueError('Specified column %s as source of col names for unfolded columns, but no such column exists' % new_col_names_col)
+                raise ValueError('Specified column %s as source of col names for unfolded columns, but no such column exists' % self.new_col_names_col)
         else:
-            new_cols_col_indx = None
+            self.new_cols_col_indx = None
         try:
-            col_indx_to_unfold = header.index(col_name_to_unfold)
+            self.col_indx_to_unfold = header.index(self.col_name_to_unfold)
         except IndexError:
-            raise ValueError('The column to unfold (%s) does not appear in the table header (%s)' % (col_name_to_unfold, header))
+            raise ValueError('The column to unfold (%s) does not appear in the table header (%s)' % (self.col_name_to_unfold, header))
         try:
-            col_indx_of_values = header.index(col_name_unfold_values)
+            self.col_indx_of_values = header.index(self.col_name_unfold_values)
         except IndexError:
-            raise ValueError('The column of unfold values (%s) does not appear in the table header (%s)' % (col_name_unfold_values, header))
-        return (col_indx_to_unfold, col_indx_of_values, header, new_cols_col_indx)
-
+            raise ValueError('The column of unfold values (%s) does not appear in the table header (%s)' % (self.col_name_unfold_values, header))
+        return header
+        
+    #-------------------------
+    # output_result
+    #----------------- 
+        
+    def output_result(self):
+        # Do the writing-out, to STDOUT, a file, or
+        # by building an internal 2d array of the result
+        # and returning an iterator to it:
+        try:
+            # Will be None if iterator requested:
+            (out_fd, writer) = self.make_writer(self.out_method)
             
-survey = [['Userid','Question','Questiontype','Timeadded','Answer'],
-               [10,'Dob','Pulldown','Jun2010','1983'],     
-               [10,'Gender','Radio','May2011','f'],
-               [20,'Dob','Pulldown','Jun2010','1980'],
-               [20,'Gender','Radio','May2011','m']
-               ]
-
-shaper = TableShaper()
-
-shaper.unfold(survey, 'Question', 'Answer', out_method=OutMethod.STDOUT)
+            (header, unfolded_max_len) = self.create_out_header_row(self.header)
     
+            if self.out_method == OutMethod.ITERATOR:
+                result = [header]
+            else:
+                writer.writerow(header)
+            # Each new row is about one of the unfolded values,
+            # like 'question' in the example:
+            for unfold_key in self.unfolded_values_dict.keys():
+                new_row = [unfold_key]
+                # Add constant-column values if any:
+                for col_name in self.constant_cols:
+                    # The constant-column value for the current
+                    # rows value in the column being unfolded is
+                    # kept in self.const_col_dict. The key is 
+                    # the name of the constant column, plus the
+                    # value of the unfolded column in the current row:
+                    const_col_key = col_name+self.unfolded_values_dict[unfold_key]
+                    col_constant = self.const_col_dict[const_col_key]
+                    new_row.append(col_constant)
+                
+                unfolded_values = self.unfolded_values_dict[unfold_key]
+                # Fill short-row vectors with zeros:
+                unfolded_values = unfolded_values + (unfolded_max_len - len(unfolded_values))*[0]
+                new_row.extend(unfolded_values)
+                if self.out_method == OutMethod.ITERATOR:
+                    result.append(new_row)
+                else:
+                    writer.writerow(new_row)
+        finally:
+            if self.out_method == OutMethod.ITERATOR:
+                return(iter(result))
+            elif self.out_method != OutMethod.STDOUT:
+                out_fd.close()
+
+    # ---------------------------------- Support Methods ---------------------
+                    
+    #-------------------------
+    # make_writer
+    #----------------- 
             
+    def make_writer(self, out_method):
+    # Obtain a csv writer object if function is
+    # not called as a generator:
+        if out_method != OutMethod.ITERATOR and out_method != OutMethod.STDOUT:
+            fd = open(out_method.FILE, 'w')
+        elif out_method == OutMethod.STDOUT:
+            fd = sys.stdout
+        else:
+            fd = None
+        if fd is not None:
+            writer = csv.writer(fd)
+        return (fd,writer)
+    
         
