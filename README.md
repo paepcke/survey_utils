@@ -1,4 +1,31 @@
-# Unfolding Tables
+#### Installation
+
+```
+python setup install
+python setup test
+```
+
+**Note:** The setup.py file contains a choice for installing
+  particular modules, but not others. Currently there are just two
+  choices that can be mixed and matched:
+
+ * Only install `unfolding`. This facility will reshape
+   tables. Installation is fast and sparse.
+ * Only, or also install `math_utils`. This facility provides for
+   replacing missing values by the mean or median of their row or
+   column, some plotting utilities, and more. Including this module in
+   the install will install scipy, a substantial package.
+
+   When installing math_utils in **MacOS** you may get an error
+   message: *error: library dfftpack has Fortran sources but no
+   Fortran compiler found.* If this happens, you need first to:
+
+   `brew install gcc`
+
+   The gcc package contains a Fortran compiler.
+
+
+#### Unfolding Tables
 
 Survey results often arrive with a row holding data from
 one respondent. What is needed for many stats analyses is
