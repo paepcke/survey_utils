@@ -3,7 +3,6 @@ from scipy.cluster.hierarchy import dendrogram
 
 #import pandas
 import numpy as np
-from StdSuites.AppleScript_Suite import missing_value
 
 #-------------------------
 # replacZerosNparray()
