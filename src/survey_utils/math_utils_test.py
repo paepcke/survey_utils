@@ -16,7 +16,7 @@ from math_utils import replaceMissingValsNparray, replaceMissingValsDataFrame
 from math_utils import replace_matches, non_matches
 from math_utils import fancy_dendrogram
 
-DO_ALL = False
+DO_ALL = True
 DO_DENDROGRAM = True
 
 class Test(unittest.TestCase):
