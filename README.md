@@ -24,6 +24,8 @@ python setup test
 
    The gcc package contains a Fortran compiler.
 
+If math_utils is not installed, then `python install tests` will fail.
+But not to worry.
 
 #### Unfolding Tables
 

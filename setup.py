@@ -6,8 +6,8 @@ from setuptools import setup
 # and matplotlib will be installed as well.
 # Modules like 'unfold' are lighter weight:
 
-mods_to_install = ['unfold']
-#mods_to_install = ['unfold','math_utils']
+#mods_to_install = ['unfold']
+mods_to_install = ['unfold','math_utils']
 
 mods_to_require = []
 if 'unfold' in mods_to_install:
