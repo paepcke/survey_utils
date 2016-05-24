@@ -254,7 +254,7 @@ on numpy.ndarray structures, a corresponding
 ####Dendrograms
 
 Function `fancy_dendrogram()` displays hierarchical clusters
-in visual form. The function is from ![a dendrogram tutorial](https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/)
+in visual form. The function is from [a dendrogram tutorial](https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/)
 with some additional documentation in the code header.
 
 Here is how to use the facility.
