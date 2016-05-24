@@ -1,6 +1,9 @@
 import multiprocessing
 from setuptools import setup
 
+import os,sys
+sys.path.append(os.path.join(os.getcwd(), 'src'))
+
 # Modify mods_to_install to taste.
 # If math_utils included, then scipy/numpy
 # and matplotlib will be installed as well.
@@ -15,7 +18,9 @@ if 'unfold' in mods_to_install:
 if 'math_utils' in mods_to_install:
   mods_to_require.extend(['scipy>=0.17.0',
 			  'matplotlib>=1.5.0',
-			  'pandas>=0.17.1'])
+			  'pandas>=0.17.1',
+			  'freetype-py>=1.0.2',
+			  ])
 
 test_requirements = ['nose>=1.0']
 
@@ -25,7 +30,9 @@ setup(
     py_modules = mods_to_install,
 
     # Dependencies on other packages:
-    setup_requires   = ['nose>=1.1.2'],
+    setup_requires   = ['nose>=1.3.7',
+			'numpy>=1.11.0'
+			],
     tests_require    = test_requirements,
     install_requires = mods_to_require + test_requirements,
 
