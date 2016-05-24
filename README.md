@@ -1,4 +1,31 @@
-# Unfolding Tables
+#### Installation
+
+```
+python setup install
+python setup test
+```
+
+**Note:** The setup.py file contains a choice for installing
+  particular modules, but not others. Currently there are just two
+  choices that can be mixed and matched:
+
+ * Only install `unfolding`. This facility will reshape
+   tables. Installation is fast and sparse.
+ * Only, or also install `math_utils`. This facility provides for
+   replacing missing values by the mean or median of their row or
+   column, some plotting utilities, and more. Including this module in
+   the install will install scipy, a substantial package.
+
+   When installing math_utils in **MacOS** you may get an error
+   message: *error: library dfftpack has Fortran sources but no
+   Fortran compiler found.* If this happens, you need first to:
+
+   `brew install gcc`
+
+   The gcc package contains a Fortran compiler.
+
+
+#### Unfolding Tables
 
 Survey results often arrive with a row holding data from
 one respondent. What is needed for many stats analyses is
@@ -155,3 +182,107 @@ optional arguments:
                         (e.g. 'userId'); if not provided, the new cols 
                         will be 'v1','v2',...
 ```
+####Replacing Missing Values
+
+Given either a numpy ndarray, or a Pandas DataFrame, you can replace
+missing values. Options are to replace missing values with the:
+
+ * mean of the value's row,
+ * mean of the value's column,
+ * median of the value's row,
+ * median of the value's column,
+
+In addition, you can specify what is considered a missing
+value. Options are:
+
+ * numpy.nan
+ * numpy.inf
+ * numpy.posinf
+ * numpy.neginf
+ * any other Python value.
+
+Example: given `numpy.ndarray self.arr`:
+
+  A | B | C | D
+ ---|---|---|---
+ 1  |2  |3  |13
+ 4  |0  |6  |14
+ 4  |8  |9  |15
+ 10 |11 |12 |16
+
+
+Can use:
+```
+res = replaceMissingValsNparray(self.arr, 
+                                direction='column',
+                                replacement='median',
+                                missing_value=0)
+```
+to get:
+
+  A | B | C | D
+ ---|---|---|---
+ 1  |2  |3  |13
+ 4  |8  |6  |14
+ 4  |8  |9  |15
+ 10 |11 |12 |16
+
+Notice that the zero in `arr[1,1]` was replaced
+by the median of the column in which the zero
+resided: MEDIAN(2,8,11). The zero itself is disregarded
+for the median computation.
+
+Instead of setting `replacement` to 'median', it can
+be specified as 'mean,' resulting in:
+
+  A | B | C | D
+ ---|---|---|---
+ 1  |2  |3  |13
+ 4  |7  |6  |14
+ 4  |8  |9  |15
+ 10 |11 |12 |16
+
+The `direction` parameter can be set to 'row', in
+which case the mean/median are taken across, instead
+of top to bottom.
+
+In addtion to `replaceMissingValsNparray()`, which works
+on numpy.ndarray structures, a corresponding
+`replaceMissingValsDataFrame()` function works on Panda
+`DataFrame`s.
+
+####Dendrograms
+
+Function `fancy_dendrogram()` displays hierarchical clusters
+in visual form. The function is from [a dendrogram tutorial](https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/)
+with some additional documentation in the code header.
+
+Here is how to use the facility.
+```
+def test_fancy_dendrogram(self):
+    '''
+    Generates a dendrogram in a new window.
+    '''
+    # generate two clusters: a with 100 points, b with 50:
+    np.random.seed(4711)  # for repeatability of this tutorial
+    a = np.random.multivariate_normal([10, 0], [[3, 1], [1, 4]], size=[100,])
+    b = np.random.multivariate_normal([0, 20], [[3, 1], [1, 4]], size=[50,])
+    X = np.concatenate((a, b),)        
+
+    # generate the linkage matrix
+    Z = linkage(X, 'ward')
+
+    fancy_dendrogram(
+        Z,
+        truncate_mode='lastp',
+        p=12,
+        leaf_rotation=90.,
+        leaf_font_size=12.,
+        show_contracted=True,
+        annotate_above=10  # useful in small plots so annotations don't overlap
+        )
+
+    plt.show()
+```
+	
+![Example dendrogram](http://infolab.stanford.edu/~paepcke/shared-documents/dendrogram.png "Example dendrogram")
