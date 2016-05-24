@@ -182,3 +182,72 @@ optional arguments:
                         (e.g. 'userId'); if not provided, the new cols 
                         will be 'v1','v2',...
 ```
+####Replacing Missing Values
+
+Given either a numpy ndarray, or a Pandas DataFrame, you can replace
+missing values. Options are to replace missing values with the:
+
+ * mean of the value's row,
+ * mean of the value's column,
+ * median of the value's row,
+ * median of the value's column,
+
+In addition, you can specify what is considered a missing
+value. Options are:
+
+ * numpy.nan
+ * numpy.inf
+ * numpy.posinf
+ * numpy.neginf
+ * any other Python value.
+
+Example: given `numpy.ndarray self.arr`:
+
+  A | B | C | D
+ ---|---|---|---
+ 1  |2  |3  |13
+ 4  |0  |6  |14
+ 4  |8  |9  |15
+ 10 |11 |12 |16
+
+
+Can use:
+```
+res = replaceMissingValsNparray(self.arr, 
+                                direction='column',
+                                replacement='median',
+                                missing_value=0)
+```
+to get:
+
+  A | B | C | D
+ ---|---|---|---
+ 1  |2  |3  |13
+ 4  |8  |6  |14
+ 4  |8  |9  |15
+ 10 |11 |12 |16
+
+Notice that the zero in `arr[1,1]` was replaced
+by the median of the column in which the zero
+resided: MEDIAN(2,8,11). The zero itself is disregarded
+for the median computation.
+
+Instead of setting `replacement` to 'median', it can
+be specified as 'mean,' resulting in:
+
+  A | B | C | D
+ ---|---|---|---
+ 1  |2  |3  |13
+ 4  |7  |6  |14
+ 4  |8  |9  |15
+ 10 |11 |12 |16
+
+The `direction` parameter can be set to 'row', in
+which case the mean/median are taken across, instead
+of top to bottom.
+
+In addtion to `replaceMissingValsNparray()`, which works
+on numpy.ndarray structures, a corresponding
+`replaceMissingValsDataFrame()` function works on Panda
+`DataFrame`s.
+
