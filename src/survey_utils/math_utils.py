@@ -3,13 +3,15 @@ from scipy.cluster.hierarchy import dendrogram
 
 #import pandas
 import numpy as np
+from StdSuites.AppleScript_Suite import missing_value
 
 #-------------------------
 # replacZerosNparray()
 #----------------- 
-def replaceZerosNparray(nxmNparray, 
+def replaceMissingValsNparray(nxmNparray, 
                         direction='column',
-                        replacement='median'):
+                        replacement='median',
+                        missing_value=np.nan):
     '''
     Given nxm nparray, replace every zero
     with the median/mean of either the cell's row 
@@ -41,7 +43,23 @@ def replaceZerosNparray(nxmNparray,
                [ 4,  8,  9, 15],
                [10, 11, 12, 16]])
                
-    Analogously with the mean:
+    Analogously with the mean.
+    
+    :param nxmNparray: a two-dimensional numpy ndarray
+    :type nxmNparray: numpby.ndarray 
+    :param direction=: direction along which the median or mean
+        is computed for replacing missing values. Options are
+        'column' and 'row'
+    :type directions=: string
+    :param replacement=: whether to compute median or mean of
+        the chosen direction (row/column) to replace missing
+        values. Options are 'median' and 'mean'
+    :type replacement=: string
+    :param missing_value: the value that stands for 'value missing'. May be
+        zero, numpy.nan, numpy.inf, or any other value.
+    :type missing_value: ANY
+    :returns new ndarray with zeros replaced.    
+    :rtype: numpay.ndarray
     '''
     if direction == 'column':
         vecSize = nxmNparray.shape[1]
@@ -49,8 +67,9 @@ def replaceZerosNparray(nxmNparray,
         vecSize = nxmNparray.shape[0]
     
     # For each column or row vector, replace
-    # all 0s with the median of that vector,
-    # calculated without those 0s:
+    # all missing values with the median/mean 
+    # of that vector, calculated without those
+    # missing values:
     
     for indx in range(vecSize):
 
@@ -60,14 +79,14 @@ def replaceZerosNparray(nxmNparray,
             vec = nxmNparray[indx,:]
         
         # Compute the median/mean for cells
-        # of the vector that are 0:
+        # of the vector that are missing values:
         if replacement == 'median':
-            newVec = np.median(vec[vec > 0])
+            replacement_value = np.median(non_matches(vec, missing_value))
         else:
-            newVec = np.mean(vec[vec > 0])
+            replacement_value = np.mean(non_matches(vec, missing_value))
         
-        # Replace the zero (in the original data):
-        vec[vec == 0] = newVec
+        # Replace the missing value(s) (in the original data):
+        replace_matches(vec, missing_value, replacement_value)
         
     return(nxmNparray)
 
@@ -76,9 +95,10 @@ def replaceZerosNparray(nxmNparray,
 #----------------- 
 
 
-def replaceZerosDataFrame(nxmDataFrame, 
+def replaceMissingValsDataFrame(nxmDataFrame, 
                           direction='column',
-                          replacement='median'):
+                          replacement='median',
+                          missing_value=np.nan):
     '''
     Given nxm pandas DataFrame, replace every zero
     with the median/mean of either the cell's row 
@@ -110,7 +130,25 @@ def replaceZerosDataFrame(nxmDataFrame,
                [ 4,  8,  9, 15],
                [10, 11, 12, 16]])
                
-    Analogously with the mean:
+    Analogously with the mean.
+
+    :param nxmDataFrame: a two-dimensional pandas DataFrame 
+    :type nxmNparray: pandas.DataFrame
+    :param direction=: direction along which the median or mean
+        is computed for replacing missing values. Options are
+        'column' and 'row'
+    :type directions=: string
+    :param replacement=: whether to compute median or mean of
+        the chosen direction (row/column) to replace missing
+        values. Options are 'median' and 'mean'
+    :type replacement=: string
+    :param missing_value: the value that stands for 'value missing'. May be
+        zero, numpy.nan, numpy.inf, or any other value.
+    :type missing_value: ANY
+    :returns nxmDataFrame with zeros replaced. I.e. returns a *view*, 
+        not a copy.    
+    :rtype: pandas.DataFrame
+    
     '''
     if direction == 'column':
         vecSize = nxmDataFrame.shape[1]
@@ -139,16 +177,16 @@ def replaceZerosDataFrame(nxmDataFrame,
             # warning when modified vector is
             # later assigned as a row:
             vec = nxmDataFrame.iloc[indx].copy()
-            
-        # Compute the median, disregarding 0s:
+
+        # Compute the median, disregarding missing values:            
         if replacement == 'median':
-            newVal = np.median(vec[vec > 0])
+            replacement_value = np.median(non_matches(vec, missing_value))
         else:
-            newVal = np.mean(vec[vec > 0])
-            
-        # Replace the 0s:
-        vec[vec == 0] = newVal
-        
+            replacement_value = np.mean(non_matches(vec, missing_value))
+
+        # Replace the missing value(s) (in the original data):
+        replace_matches(vec, missing_value, replacement_value)
+
         # Replace the row/column in the original(!)        
         if direction == 'column':
             nxmDataFrame[colNames[indx]] = vec
@@ -163,17 +201,37 @@ def replaceZerosDataFrame(nxmDataFrame,
 
 def fancy_dendrogram(*args, **kwargs):
     '''
-    Calls scipy.cluster.hierarchy.dendrogram, adding:
-      - a horizontal reference line controlled by kwarg max_d=
+    Calls scipy.cluster.hierarchy.dendrogram, adding a
+    horizontal reference line at a chosen distance. That
+    is the reference line is parallel to the x-axis, and
+    intersects y-axis at a given distance.
+    
+    Keyword arguments are as per scipy.cluster.hierarchy.dendrogram,
+    plus the ones below.
+    
+    :param max_d=: distance at which reference line is to be drawn
+    :type max_d=: float
+    :param annotate_above=: only show details of interior
+        hierarchy nodes when distance is > annotate_above.
+        I.e. only the higher nodes are detailed. Bottom layers
+        are summarized.
+    :type annotate_above=: float
+    :param x_label=: label for x-axis. Default is 
+        'Sample index or (cluster size)'
+    :type x_label=: string    
+    :param y_label=: label for y-axis. Default is 'Distance'.
+    :type y_label=: string
+    :param x_axis_font_size=: font size of x-axis label.
+        Default: 9pt
+    :type x_label=: integer
       - option to add the distance (i.e. y-axis) read-out 
-      - horizontal cluster links whose distance is larger
-        then kwarg annotate_above=
-      - labels Y-axis with content of kwarg y_label=,
-        or with the default 'Distance'
-      - labels X-axis either with content of kwarg x_label=
-        or with the default 'Sample index or (cluster size)'
-      - x-axis fontsize is kwarg x_axis_font_size= or 9pt
-      - y-axis fontsize is kwarg y_axis_font_size= or 9pt
+    :param y_axis_font_size=: font size of y-axis label.
+        Default: 9pt
+    :type x_label=: integer
+    :return: the dendrogram
+    :rtype: ?
+    
+      - option to add the distance (i.e. y-axis) read-out 
     '''
     max_d = kwargs.pop('max_d', None)
     if max_d and 'color_threshold' not in kwargs:
@@ -204,6 +262,73 @@ def fancy_dendrogram(*args, **kwargs):
             plt.axhline(y=max_d, c='k')
     return ddata   
 
-
+# ----------------------------- Private Utility Functions -------------
         
+#-------------------------
+# non_matches
+#----------------
+
+def non_matches(arr, val):
+    '''
+    Given a ndarray and an arbitrary 
+    value, including np.nan, np.inf, etc.,
+    return an ndarray that contains 
+    only elements that are *not* equal 
+    to val.  
+    
+    :param arr: n-dimensional numpy array
+    :type arr: numpy.ndarray
+    :param val: value, including special values numpy.nan, numpy.inf, numpy.neginf, etc.
+    :type val: ANY.
+    '''
+    
+    # Special value?
+    if np.isfinite(val):
+        # No, just normal value:
+        return arr[arr != val]
+    # Is special value, such as numpy.nan.
+    # Create ndarray with True/False entries
+    # that reflect which entries are not equal
+    # to val:
+    elif np.isnan(val):
+        cond = np.logical_not(np.isnan(arr))
+    elif np.isinf(val):
+        cond = np.logical_not(np.isinf(arr))
+    elif np.isneginf(val):
+        cond = np.logical_not(np.isneginf(arr))
+    elif np.isposinf(val):
+        cond = np.logical_not(np.isposinf(arr))
+        
+    # Use the True/False ndarray as a mask
+    # over arr:
+    return arr[cond]
+        
+#-------------------------
+# replace_matches
+#----------------
+    
+def replace_matches(arr, old_val, new_val):
+    
+    # Special value?
+    if np.isfinite(old_val):
+        # No, just normal value:
+        arr[arr == old_val] = new_val
+        return arr
+    # Is special value, such as numpy.nan.
+    # Create ndarray with True/False entries
+    # that reflect which entries are not equal
+    # to val:
+    elif np.isnan(old_val):
+        arr[np.isnan(arr)] = new_val
+        return arr
+    elif np.isinf(old_val):
+        arr[np.isinf(arr)] = new_val
+        return arr
+    elif np.isneginf(old_val):
+        arr[np.isneginf(arr)] = new_val
+        return arr
+    elif np.isposinf(old_val):
+        arr[np.isposinf(arr)] = new_val
+        return arr
+
     

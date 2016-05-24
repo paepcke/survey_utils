@@ -13,7 +13,9 @@ mods_to_require = []
 if 'unfold' in mods_to_install:
   mods_to_require.append('ordered-set>=2.0.1')
 if 'math_utils' in mods_to_install:
-  mods_to_require.extend(['scipy>=0.17.0', 'matplotlib>=1.5.0'])
+  mods_to_require.extend(['scipy>=0.17.0',
+			  'matplotlib>=1.5.0',
+			  'pandas>=0.17.1'])
 
 test_requirements = ['nose>=1.0']
 
