@@ -15,7 +15,7 @@ from cStringIO import StringIO
 
 DO_ALL = True
 
-class TestSurveyUtils(unittest.TestCase):
+class TestUnfolding(unittest.TestCase):
  
  
     def setUp(self):

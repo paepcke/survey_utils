@@ -1,15 +1,29 @@
 from setuptools import setup
 
-from distutils.command.install import install
-import os,sys
+from distutils.command.install import install, Command
+from distutils.tests import test_cmd
+import os,sys, unittest
 
 sys.path.append(os.path.join(os.getcwd(), 'src'))
 
 mods_to_install = []
+mods_to_test    = []
 
 class InstallCommand(install):
 
-    description = "Installs the unfolding package."
+    description = "Installs the survey_utils package; allows specification of modules to include."
+
+    # Add your new user options to the
+    # ones that are baked into the install
+    # command by default. Each new CLI option
+    # is a triplet:
+    #
+    #   long_name, short_name, help_text
+    #
+    # Add a '=' after the long name if the
+    # option requires an argument. Use None
+    # if you don't want to allow a short option.
+    #
     user_options = [
         ('module=', 'm', "Specify 'unfolding', 'math_utils', or 'all'."),
     ] + install.user_options
@@ -27,20 +41,70 @@ class InstallCommand(install):
         assert self.module in (None, 'unfolding', 'math_utils', 'all'), 'Invalid module!'
         
     def run(self):
+        # Install math_utils only if explicitly
+        # requested in the -m/--module option,
+        # or if 'all' is requested
         if self.module == 'unfolding':
             mods_to_install = ['unfold']
         elif self.module in ['math_utils', 'all']:
             mods_to_install = ['unfold', 'math_utils']
         else:
-            # No modules arg given on the command line.
+            # No module arg given on the command line.
             # Require it for the install command, so that
             # user doesn't unexpectedly install all of
             # numpy/scipy:
          
-            print("Must provide --modules [unfolding | math_utils | all]. Install aborted.")
+            print("Must provide --module [unfolding | math_utils | all]. Install aborted.")
             sys.exit()
         
         install.run(self)
+
+
+class TestCommand(Command):
+
+    description = "The the survey_utils; allows specification of module to include"
+
+    # Add these new user options to the
+    # ones that are baked into the install
+    # command by default:
+    
+    user_options = [
+        ('module=', 'm', "Specify 'unfolding', 'math_utils', or 'all'."),
+    ] + install.user_options
+
+    def initialize_options(self):
+        # *Must* initialize any options you introduced
+        # in user_options. Else parent's finalize_options
+        # won't read the option from the command line at
+        # all!!!!
+        self.module = None
+
+    def finalize_options(self):
+        assert self.module in (None, 'unfolding', 'math_utils', 'all'), 'Invalid module!'
+        
+    def run(self):
+        if self.module == 'unfolding':
+            from survey_utils.unfolding_test import TestUnfolding
+            mods_to_test = [TestUnfolding]
+        elif self.module == 'math_utils':
+            from survey_utils.math_utils_test import TestMathUtils
+            mods_to_test = [TestMathUtils]
+        elif self.module == 'all':
+            from survey_utils.unfolding_test import TestUnfolding
+            from survey_utils.math_utils_test import TestMathUtils
+            mods_to_test = [TestUnfolding, TestMathUtils]
+        else:
+            # No modules arg given on the command line.
+            # Require it for the test command, so that
+            # user doesn't unexpectedly install all of
+            # numpy/scipy:
+         
+            print("Must provide --module [unfolding | math_utils | all]. Test aborted.")
+            sys.exit()
+        
+        for test_class in mods_to_test:
+            test_cmd.run_unittest(unittest.makeSuite(test_class))
+
 
 mods_to_require = []
 if 'unfold' in mods_to_install:
@@ -59,7 +123,8 @@ setup(
     version = "0.0.1",
     py_modules = mods_to_install,
     cmdclass = {
-      'install': InstallCommand
+      'install': InstallCommand,
+      'test': TestCommand
       },
 
     # Dependencies on other packages:

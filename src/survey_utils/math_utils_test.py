@@ -19,7 +19,7 @@ from math_utils import fancy_dendrogram
 DO_ALL = True
 DO_DENDROGRAM = True
 
-class Test(unittest.TestCase):
+class TestMathUtils(unittest.TestCase):
 
 
     def setUp(self):
@@ -66,7 +66,7 @@ class Test(unittest.TestCase):
     def tearDown(self):
         pass
 
-    # ------------  Test Numpy Array Missing Values Replacement --------------
+    # ------------  TestMathUtils Numpy Array Missing Values Replacement --------------
 
     @skipIf(DO_ALL != True, 'skip this one.')
     def test_nparray_median_replace_col(self):
@@ -117,7 +117,7 @@ class Test(unittest.TestCase):
                                         missing_value=0)
         self.assertTrue(np.array_equal(self.arr_mean_by_row, res))
         
-    # ------------  Test DataFrame Missing Values Replacement --------------
+    # ------------  TestMathUtils DataFrame Missing Values Replacement --------------
 
     @skipIf(DO_ALL != True, 'skip this one.')
     def test_frame_median_replace_col(self):
@@ -203,11 +203,11 @@ class Test(unittest.TestCase):
         
     @skipIf(DO_ALL != True, 'skip this one.')
     def test_non_matches(self):
-        # Test with getting zeros removed:
+        # TestMathUtils with getting zeros removed:
         new_arr = non_matches(self.arr[1,:], 0)
         self.assertTrue(np.array_equal(new_arr, np.array([4,6,14])))
         
-        # Test with getting NaN removed:
+        # TestMathUtils with getting NaN removed:
         new_arr = non_matches(self.arr_nan[1,:], np.nan)
         self.assertTrue(np.array_equal(new_arr, np.array([4,6,14])))
         
@@ -216,5 +216,5 @@ class Test(unittest.TestCase):
     #---------------------------- Main ----------------
             
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+    #import sys;sys.argv = ['', 'TestMathUtils.testName']
     unittest.main()
