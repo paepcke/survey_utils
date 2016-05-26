@@ -6,6 +6,12 @@ import os,sys, unittest
 
 sys.path.append(os.path.join(os.getcwd(), 'src'))
 
+available_modules = ['unfolding', 'math_utils', 'plotting_utils', 'all']
+help_text = 'Please specify one of: '
+for module in available_modules:
+    help_text += ", '%s'" % module
+
+
 mods_to_install = []
 mods_to_test    = []
 
@@ -25,7 +31,7 @@ class InstallCommand(install):
     # if you don't want to allow a short option.
     #
     user_options = [
-        ('module=', 'm', "Specify 'unfolding', 'math_utils', or 'all'."),
+        ('module=', 'm', help_text),
     ] + install.user_options
 
     def initialize_options(self):
@@ -38,25 +44,32 @@ class InstallCommand(install):
 
     def finalize_options(self):
         install.finalize_options(self)
-        assert self.module in (None, 'unfolding', 'math_utils', 'all'), 'Invalid module!'
+        
+        assert self.module in [None] + available_modules, help_text
         
     def run(self):
-        # Install math_utils only if explicitly
-        # requested in the -m/--module option,
-        # or if 'all' is requested
-        if self.module == 'unfolding':
-            mods_to_install = ['unfold']
-        elif self.module in ['math_utils', 'all']:
-            mods_to_install = ['unfold', 'math_utils']
-        else:
+        
+            
+        if self.module not in available_modules:
             # No module arg given on the command line.
             # Require it for the install command, so that
             # user doesn't unexpectedly install all of
             # numpy/scipy:
          
-            print("Must provide --module [unfolding | math_utils | all]. Install aborted.")
-            sys.exit()
+            print(help_text + '. Install aborted.')
+            sys.exit()        
         
+        # Install math_utils only if explicitly
+        # requested in the -m/--module option,
+        # or if 'all' is requested
+        mods_to_install = []
+        if self.module in ['unfolding', 'all']:
+            mods_to_install.append('unfold')
+        if self.module in ['math_utils', 'all']:
+            mods_to_install.append('math_utils')
+        if self.module in ['plotting_utils', 'all']:
+            mods_to_install.append('plotting_utils')
+
         install.run(self)
 
 
@@ -69,7 +82,7 @@ class TestCommand(Command):
     # command by default:
     
     user_options = [
-        ('module=', 'm', "Specify 'unfolding', 'math_utils', or 'all'."),
+        ('module=', 'm', help_text),
     ] + install.user_options
 
     def initialize_options(self):
@@ -80,27 +93,29 @@ class TestCommand(Command):
         self.module = None
 
     def finalize_options(self):
-        assert self.module in (None, 'unfolding', 'math_utils', 'all'), 'Invalid module!'
+        assert self.module in [None] + available_modules, help_text
         
     def run(self):
-        if self.module == 'unfolding':
-            from survey_utils.unfolding_test import TestUnfolding
-            mods_to_test = [TestUnfolding]
-        elif self.module == 'math_utils':
-            from survey_utils.math_utils_test import TestMathUtils
-            mods_to_test = [TestMathUtils]
-        elif self.module == 'all':
-            from survey_utils.unfolding_test import TestUnfolding
-            from survey_utils.math_utils_test import TestMathUtils
-            mods_to_test = [TestUnfolding, TestMathUtils]
-        else:
+
+            
+        if self.module not in available_modules:
             # No modules arg given on the command line.
             # Require it for the test command, so that
             # user doesn't unexpectedly install all of
             # numpy/scipy:
          
-            print("Must provide --module [unfolding | math_utils | all]. Test aborted.")
+            print(help_text + ". Test aborted.")
             sys.exit()
+        mods_to_test = []
+        if self.module in ['unfolding', 'all']:
+            from survey_utils.unfolding_test import TestUnfolding
+            mods_to_test.append(TestUnfolding)
+        if self.module in ['math_utils' , 'all']:
+            from survey_utils.math_utils_test import TestMathUtils
+            mods_to_test.append(TestMathUtils)
+        if self.module in ['plotting_utils' , 'all']:
+            from survey_utils.plotting_utils_test import TestPlotting
+            mods_to_test.append(TestPlotting)
         
         for test_class in mods_to_test:
             test_cmd.run_unittest(unittest.makeSuite(test_class))

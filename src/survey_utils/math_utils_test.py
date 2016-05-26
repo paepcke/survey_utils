@@ -6,15 +6,11 @@ Created on May 22, 2016
 import unittest
 from unittest import skipIf
 
-from matplotlib import pyplot as plt
-from scipy.cluster.hierarchy import linkage
-
 import numpy as np
 import pandas as pn
 
 from math_utils import replaceMissingValsNparray, replaceMissingValsDataFrame
 from math_utils import replace_matches, non_matches
-from math_utils import fancy_dendrogram
 
 DO_ALL = True
 DO_DENDROGRAM = True
@@ -158,37 +154,7 @@ class TestMathUtils(unittest.TestCase):
                                           replacement='mean')
         self.assertTrue(np.array_equal(self.arr_mean_by_row, res))
 
-
-    #---------------------------- Dendrogram ----------------
-    
-    @skipIf(DO_DENDROGRAM != True, 'skip this one.')    
-    def test_fancy_dendrogram(self):
-        '''
-        Generates a dendrogram in a new window. No
-        way to assert anythying.
-        '''
-        # generate two clusters: a with 100 points, b with 50:
-        np.random.seed(4711)  # for repeatability of this tutorial
-        a = np.random.multivariate_normal([10, 0], [[3, 1], [1, 4]], size=[100,])
-        b = np.random.multivariate_normal([0, 20], [[3, 1], [1, 4]], size=[50,])
-        X = np.concatenate((a, b),)        
-
-        # generate the linkage matrix
-        Z = linkage(X, 'ward')
-
-        fancy_dendrogram(
-            Z,
-            truncate_mode='lastp',
-            p=12,
-            leaf_rotation=90.,
-            leaf_font_size=12.,
-            show_contracted=True,
-            annotate_above=10  # useful in small plots so annotations don't overlap
-            )
-
-        plt.show()
-        
-        
+      
     #---------------------------- Array Element Extraction/Replacement Utils ----------------
     
     @skipIf(DO_ALL != True, 'skip this one.')
