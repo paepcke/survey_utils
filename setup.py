@@ -1,7 +1,7 @@
 from setuptools import setup
 
 from distutils.command.install import install, Command
-from distutils.tests import test_cmd
+from test.test_support import run_unittest
 import os,sys, unittest
 
 sys.path.append(os.path.join(os.getcwd(), 'src'))
@@ -118,7 +118,7 @@ class TestCommand(Command):
             mods_to_test.append(TestPlotting)
         
         for test_class in mods_to_test:
-            test_cmd.run_unittest(unittest.makeSuite(test_class))
+            run_unittest(unittest.makeSuite(test_class))
 
 
 mods_to_require = []
