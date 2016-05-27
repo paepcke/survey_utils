@@ -12,8 +12,9 @@ for module in available_modules:
     help_text += ", '%s'" % module
 
 
-mods_to_install = []
 mods_to_test    = []
+mods_to_require = []
+mods_to_install = []
 
 class InstallCommand(install):
 
@@ -63,13 +64,19 @@ class InstallCommand(install):
         # requested in the -m/--module option,
         # or if 'all' is requested
         mods_to_install = []
+        mods_to_require = []
         if self.module in ['unfolding', 'all']:
-            mods_to_install.append('unfold')
+            mods_to_require.append('ordered-set>=2.0.1')
+            mods_to_install.append('unfolding')
         if self.module in ['math_utils', 'all']:
             mods_to_install.append('math_utils')
+            mods_to_require.extend(['scipy>=0.17.0',
+                                    'pandas>=0.17.1',
+                                    'freetype-py>=1.0.2',
+                                    ])
         if self.module in ['plotting_utils', 'all']:
             mods_to_install.append('plotting_utils')
-
+            mods_to_require.append('matplotlib>=1.5.0')
         install.run(self)
 
 
@@ -121,17 +128,9 @@ class TestCommand(Command):
             run_unittest(unittest.makeSuite(test_class))
 
 
-mods_to_require = []
-if 'unfold' in mods_to_install:
-    mods_to_require.append('ordered-set>=2.0.1')
-if 'math_utils' in mods_to_install:
-    mods_to_require.extend(['scipy>=0.17.0',
-                            'matplotlib>=1.5.0',
-                            'pandas>=0.17.1',
-                            'freetype-py>=1.0.2',
-                            ])
-
-test_requirements = ['nose>=1.0']
+#*****test_requirements = ['nose>=1.0'] 
+test_requirements = ['ordered-set>=2.0.1']
+ 
 
 setup(
     name = "survey_utils",
@@ -144,13 +143,15 @@ setup(
 
     # Dependencies on other packages:
     setup_requires   = ['nose>=1.3.7',
-            'numpy>=1.11.0'
+            #'numpy>=1.11.0'
             ],
     tests_require    = test_requirements,
     install_requires = mods_to_require + test_requirements,
 
     # Unit tests; they are initiated via 'python setup.py test'
     test_suite       = 'nose.collector', 
+
+    package_dir = {'':'src'},
 
     package_data = {
         # If any package contains *.txt or *.rst files, include them:

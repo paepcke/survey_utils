@@ -1,31 +1,13 @@
-#### Installation
+<h1 align="center">
+General Utilities for Survey Analysis
+</h1>
 
-```
-python setup install
-python setup test
-```
+<div>
+The survey_tools package includes facilities needed for analyzing survey result data. Facilities include table reshaping, missing-value replacement, selection of respondents who answered fewer than X% of the questions, as well as some plotting facilities.
 
-**Note:** The setup.py file contains a choice for installing
-  particular modules, but not others. Currently there are just two
-  choices that can be mixed and matched:
+</div>
 
- * Only install `unfolding`. This facility will reshape
-   tables. Installation is fast and sparse.
- * Only, or also install `math_utils`. This facility provides for
-   replacing missing values by the mean or median of their row or
-   column, some plotting utilities, and more. Including this module in
-   the install will install scipy, a substantial package.
-
-   When installing math_utils in **MacOS** you may get an error
-   message: *error: library dfftpack has Fortran sources but no
-   Fortran compiler found.* If this happens, you need first to:
-
-   `brew install gcc`
-
-   The gcc package contains a Fortran compiler.
-
-If math_utils is not installed, then `python install tests` will fail.
-But not to worry.
+[TOC]
 
 #### Unfolding Tables
 
@@ -288,3 +270,33 @@ def test_fancy_dendrogram(self):
 ```
 	
 ![Example dendrogram](http://infolab.stanford.edu/~paepcke/shared-documents/dendrogram.png "Example dendrogram")
+
+#### Installation
+
+```
+python setup install
+python setup test
+```
+
+**Note:** The setup.py file contains a choice for installing
+  particular modules, but not others. Currently there are just two
+  choices that can be mixed and matched:
+
+ * Only install `unfolding`. This facility will reshape
+   tables. Installation is fast and sparse.
+ * Only, or also install `math_utils`. This facility provides for
+   replacing missing values by the mean or median of their row or
+   column, some plotting utilities, and more. Including this module in
+   the install will install scipy, a substantial package.
+
+   When installing math_utils in **MacOS** you may get an error
+   message: *error: library dfftpack has Fortran sources but no
+   Fortran compiler found.* If this happens, you need first to:
+
+   `brew install gcc`
+
+   The gcc package contains a Fortran compiler.
+
+If math_utils is not installed, then `python install tests` will fail.
+But not to worry.
+
