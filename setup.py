@@ -57,8 +57,9 @@ class InstallCommand(install):
             # user doesn't unexpectedly install all of
             # numpy/scipy:
          
-            print(help_text + '. Install aborted.')
-            sys.exit()        
+            #print(help_text + '. Install aborted.')
+            #sys.exit()        
+            pass
         
         # Install math_utils only if explicitly
         # requested in the -m/--module option,
@@ -111,8 +112,9 @@ class TestCommand(Command):
             # user doesn't unexpectedly install all of
             # numpy/scipy:
          
-            print(help_text + ". Test aborted.")
-            sys.exit()
+            #print(help_text + ". Test aborted.")
+            #sys.exit()
+            pass
         mods_to_test = []
         if self.module in ['unfolding', 'all']:
             from survey_utils.unfolding_test import TestUnfolding
@@ -134,7 +136,7 @@ test_requirements = ['ordered-set>=2.0.1']
 
 setup(
     name = "survey_utils",
-    version = "0.0.1",
+    version = "0.0.2",
     py_modules = mods_to_install,
     cmdclass = {
       'install': InstallCommand,
