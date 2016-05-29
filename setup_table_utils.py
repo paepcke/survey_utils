@@ -11,7 +11,7 @@ setup_requirements = ['ordered-set>=2.0.1',
 
 setup(
     name = "survey_utils",
-    version = "0.0.3",
+    version = "0.0.4",
     packages = find_packages('src', include='survey_utils.table_utils'),
     package_dir = {'':'src'},
 

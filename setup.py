@@ -1,3 +1,4 @@
+from setuptools import setup
 import subprocess
 import sys
 
@@ -16,8 +17,7 @@ def setup_module(cmd, module):
 
 setup(
     name = "survey_utils",
-    version = "0.0.3",
-    #packages = find_packages('src', include='survey_utils.plotting_utils'),
+    version = "0.0.4",
     package_dir = {'':'src'},
 
     # metadata for upload to PyPI
@@ -38,6 +38,13 @@ if __name__ == '__main__':
         sys.exit()
         
     cmd = sys.argv[1]
+
+    # Only deal with 'install' and 'test'. Let
+    # commands such as 'sdist upload' be dealt
+    # with in standard ways:
+    if cmd not in ['install', 'test']:
+      sys.exit()
+    
     modules_to_process = sys.argv[2:]
     if len(modules_to_process) == 0:
         # Process all:
