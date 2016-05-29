@@ -1,37 +1,33 @@
-import multiprocessing
-from setuptools import setup
+import subprocess
+import sys
 
-import os,sys
-sys.path.append(os.path.join(os.getcwd(), 'src'))
 
-test_requirements = ['nose>=1.0']
+known_modules = ['table_utils', 'math_utils', 'plotting_utils']
 
-setup(
-    name = "survey_utils",
-    version = "0.0.2",
+def setup_module(cmd, module):
+    if module == 'table_utils':
+        subprocess.call(['python', 'setup_table_utils.py', cmd])
+    elif module == 'math_utils':
+        subprocess.call(['python', 'setup_math_utils.py', cmd])
+    elif module == 'plotting_utils':
+        subprocess.call(['python', 'setup_plotting_utils.py', cmd])
+    else:
+        raise ValueError("Module '%s' unknown." % module)        
 
-    # Dependencies on other packages:
-    setup_requires   = ['nose>=1.3.7',
-			'numpy>=1.11.0'
-			],
-    tests_require    = test_requirements,
-    #install_requires = test_requirements,
-
-    # Unit tests; they are initiated via 'python setup.py test'
-    test_suite       = 'nose.collector', 
-
-    package_data = {
-        # If any package contains *.txt or *.rst files, include them:
-     #   '': ['*.txt', '*.rst'],
-        # And include any *.msg files found in the 'hello' package, too:
-     #   'hello': ['*.msg'],
-    },
-
-    # metadata for upload to PyPI
-    author = "Andreas Paepcke",
-    author_email = "paepcke@cs.stanford.edu",
-    description = "Utilities for managing survey results.",
-    license = "BSD",
-    keywords = "surveys, table shaping",
-    url = "https://github.com/paepcke/survey_utils",   # project home page, if any
-)
+if __name__ == '__main__':
+    
+    usage = 'python setup.py <setup-command> { table_utils | math_utils | plotting_utils}*'
+    if len(sys.argv) < 2:
+        print(usage)
+        sys.exit()
+        
+    cmd = sys.argv[1]
+    modules_to_process = sys.argv[2:]
+    if len(modules_to_process) == 0:
+        # Process all:
+        modules_to_process = known_modules
+    
+    for mod_to_process in modules_to_process:
+        print("*****Processing %s for module %s..." % (cmd, mod_to_process))
+        setup_module(cmd, mod_to_process)
+        

@@ -1,7 +1,6 @@
 <h1 align="center">
 General Utilities for Survey Analysis
 </h1>
-
 <div>
 The survey_tools package includes facilities needed for analyzing survey result data. Facilities include table reshaping, missing-value replacement, selection of respondents who answered fewer than X% of the questions, as well as some plotting facilities.
 
@@ -11,14 +10,9 @@ The survey_tools package includes facilities needed for analyzing survey result 
 
 #### Unfolding Tables
 
-Survey results often arrive with a row holding data from
-one respondent. What is needed for many stats analyses is
-one row for each question, where the responses to one row's
-question occupy one column for each respondent.
+Survey results often arrive with a row holding data from one respondent. What is needed for many stats analyses is one row for each question, where the responses to one row's question occupy one column for each respondent.
 
-The `unfold()` method of `TableShaper` provides this folding.
-Input can either be a .csv file, or a 2D Python array. Outputs
-may be:
+The `unfold()` method of `TableShaper` provides this folding. Input can either be a .csv file, or a 2D Python array. Outputs may be:
 
 * directed to a new .csv file
 * written to stdout (the default)
@@ -27,30 +21,24 @@ may be:
 The unfold service may be invoked from Python code, or
 from the command line.
 
-In reshaping, some columns may be retained, others discarded.
-Consider the following example:
- 
-    userId |  question |  questionType |  timeAdded |  answer 
-    -------|-----------|---------------|------------|---------
-     10    |  DOB      |    pullDown   |    Jun2010 |   1983     
-     10    |  gender   |    radio      |    May2011 |     F
-     20    |  DOB      |    pullDown   |    Jun2010 |   1980
-     20    |  gender   |    radio      |    May2011 |     M
+In reshaping, some columns may be retained, others discarded. Consider the following example:
+
+userId |  question |  questionType |  timeAdded |  answer
+-------|-----------|---------------|------------|---------
+ 10    |  DOB      |    pullDown   |    Jun2010 |   1983
+ 10    |  gender   |    radio      |    May2011 |     F
+ 20    |  DOB      |    pullDown   |    Jun2010 |   1980
+ 20    |  gender   |    radio      |    May2011 |     M
                       ...
 
 Minimally we want this table to be:
 
-    question | v1  |  v2   
-    ---------|-----|-----       
-      DOB    | 1983| 1980
-    gender   |  F  |  M      
+question | v1  |  v2
+---------|-----|-----
+  DOB    | 1983| 1980
+gender   |  F  |  M
 
-In this most minimal (but often sufficient) result, **questionType** and
-**timeAdded** are dropped. Values of the **question**
-column are distributed across new columns. Each **v_n**
-column holds answers by one respondent to all questions.
-Rows now hold information about one question, no longer about
-a respondent.
+In this most minimal (but often sufficient) result, **questionType** and **timeAdded** are dropped. Values of the **question** column are distributed across new columns. Each **v<sub>n</sub>** column holds answers by one respondent to all questions. Rows now hold information about one question, no longer about a respondent.
 
 Terminology:
 
@@ -69,61 +57,47 @@ Let the *unfold column* be **question**, and the *constants
 columns* be **questionType** and **timeAdded**. You could call the
 function like this:
 
-'''
+```
 shaper = TableShaper()
 shaper.unfold('/tmp/in.csv', 
        	      col_name_to_unfold='question'
        	      col_name_unfold_values='answer'
        	      constant_cols=['questionType','timeAdded'])
-
+```
 The reshaped table looks like this:
- 
-    question | questionType | timeAdded  | v1  |  v2   
-    ---------|--------------|------------|-----|-----       
-      DOB    |   pullDown   | June2010   | 1983| 1980
-    gender   |    radio     |  May2011   |  F  |  M      
- 
 
-Note that in this example the *constant columns* are **questionType**
-and **timeAdded**, and they are retained. It is an error to have
-inconsistencies in the *constant columns*. For instance,
-if the original row
+question | questionType | timeAdded  | v1  |  v2   
+---------|--------------|------------|-----|-----       
+  DOB    |   pullDown   | June2010   | 1983| 1980
+gender   |    radio     |  May2011   |  F  |  M      
+
+Note that in this example the *constant columns* are **questionType** and **timeAdded**, and they are retained. It is an error to have inconsistencies in the *constant columns*. For instance, if the original row
 
  >"20  DOB   pullDown..."
 
 had been
  >"20  DOB     radio"
 
-an error would have been raised. All *constant columns*
-field values for the same question (in different rows of the original)
-must match. 
+an error would have been raised. All *constant columns* field values for the same question (in different rows of the original) must match.
 
-Another way to call the function controls the names of the new
-columns. One column  can be specified to provide the column headers:
- 
+Another way to call the function controls the names of the new columns. One column  can be specified to provide the column headers:
 ```
-
 shaper.unfold('/tmp/in.csv',
        	      col_name_to_unfold='question'
        	      col_name_unfold_values='answer'
        	      constant_cols=['questionType','timeAdded'],
        	      new_col_names_col='userId)
-```       
-           
+```
 The reshaped table would look like this:
- 
-    question | questionType | timeAdded  |  10  |  20
-    ---------| -------------|------------|------|-----
-      DOB    |   pullDown   | June2010   | 1983 | 1980
-    gender   |    radio     |  May2011   |   F  |   M 
 
-I.e. the user id values are used as the column headers
-of the new table.
+question | questionType | timeAdded  |  10  |  20
+---------| -------------|------------|------|-----
+  DOB    |   pullDown   | June2010   | 1983 | 1980
+gender   |    radio     |  May2011   |   F  |   M
 
-To have the function behave like an iterator
-(each item will be an array with one row of the
- reshaped table):
-  
+I.e. the user id values are used as the column headers of the new table.
+
+To have the function behave like an iterator (each item will be an array with one row of the reshaped table):
 ```
 it = unfold('/tmp/in.csv',
            col_name_to_unfold='question'
@@ -133,7 +107,6 @@ it = unfold('/tmp/in.csv',
 for row in it:
     print(row)
 ```
-        
 To write the output to a file:
 
 ```
@@ -168,16 +141,14 @@ optional arguments:
 ```
 ####Replacing Missing Values
 
-Given either a numpy ndarray, or a Pandas DataFrame, you can replace
-missing values. Options are to replace missing values with the:
+Given either a numpy ndarray, or a Pandas DataFrame, you can replace missing values. Options are to replace missing values with the:
 
  * mean of the value's row,
  * mean of the value's column,
  * median of the value's row,
  * median of the value's column,
 
-In addition, you can specify what is considered a missing
-value. Options are:
+In addition, you can specify what is considered a missing value. Options are:
 
  * numpy.nan
  * numpy.inf
@@ -193,7 +164,6 @@ Example: given `numpy.ndarray self.arr`:
  4  |0  |6  |14
  4  |8  |9  |15
  10 |11 |12 |16
-
 
 Can use:
 ```
@@ -211,13 +181,9 @@ to get:
  4  |8  |9  |15
  10 |11 |12 |16
 
-Notice that the zero in `arr[1,1]` was replaced
-by the median of the column in which the zero
-resided: MEDIAN(2,8,11). The zero itself is disregarded
-for the median computation.
+Notice that the zero in `arr[1,1]` was replaced by the median of the column in which the zero resided: MEDIAN(2,8,11). The zero itself is disregarded for the median computation.
 
-Instead of setting `replacement` to 'median', it can
-be specified as 'mean,' resulting in:
+Instead of setting `replacement` to 'median', it can be specified as 'mean,' resulting in:
 
   A | B | C | D
  ---|---|---|---
@@ -226,14 +192,9 @@ be specified as 'mean,' resulting in:
  4  |8  |9  |15
  10 |11 |12 |16
 
-The `direction` parameter can be set to 'row', in
-which case the mean/median are taken across, instead
-of top to bottom.
+The `direction` parameter can be set to 'row', in which case the mean/median are taken across, instead of top to bottom.
 
-In addtion to `replaceMissingValsNparray()`, which works
-on numpy.ndarray structures, a corresponding
-`replaceMissingValsDataFrame()` function works on Panda
-`DataFrame`s.
+In addtion to `replaceMissingValsNparray()`, which works on numpy.ndarray structures, a corresponding `replaceMissingValsDataFrame()` function works on Panda `DataFrame`s.
 
 ####Dendrograms
 
@@ -273,30 +234,36 @@ def test_fancy_dendrogram(self):
 
 #### Installation
 
+You can install via pip, or via cloning github. Using pip:
 ```
-python setup install
-python setup test
+pip install survey_tools
+```
+is simple, but will install all packages. Some require large packages, such as scipy, others are much sparser. If you clone the github repo:
+```
+git clone git@github.com:paepcke/survey_utils.git
+```
+You can then:
+
+```
+python setup.py install table_utils
+python setup.py install math_utils
+python setup.py install plotting_utils
+```
+Or, to install all:
+```
+python setup.py install
 ```
 
-**Note:** The setup.py file contains a choice for installing
-  particular modules, but not others. Currently there are just two
-  choices that can be mixed and matched:
+Testing:
+```
+python setup.py test table_utils
+python setup.py test math_utils
+python setup.py test plotting_utils
+```
+Or, to test all:
+```
+python setup.py test
+```
 
- * Only install `unfolding`. This facility will reshape
-   tables. Installation is fast and sparse.
- * Only, or also install `math_utils`. This facility provides for
-   replacing missing values by the mean or median of their row or
-   column, some plotting utilities, and more. Including this module in
-   the install will install scipy, a substantial package.
-
-   When installing math_utils in **MacOS** you may get an error
-   message: *error: library dfftpack has Fortran sources but no
-   Fortran compiler found.* If this happens, you need first to:
-
-   `brew install gcc`
-
-   The gcc package contains a Fortran compiler.
-
-If math_utils is not installed, then `python install tests` will fail.
-But not to worry.
-
+**Note:** 
+The above options are in order of installation volume. Since scipy, numpy, and matplotlib are not handled well by pip, the installation assumes that if those packages are needed, you install them separately ahead of time. The easiest is to use Anaconda virtual environments, which know about these modules natively. But instructions are on the Web.

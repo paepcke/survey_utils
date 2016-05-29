@@ -11,7 +11,6 @@ import sys
 
 from ordered_set import OrderedSet
 
-
 class OutMethod():
     '''
     Enumeration-like entity used as parameter

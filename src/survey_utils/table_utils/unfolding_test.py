@@ -8,8 +8,8 @@ import tempfile
 from unittest import skipIf
 import unittest
 
-from survey_utils.unfolding import OutMethod
-from survey_utils.unfolding import TableShaper
+from survey_utils.table_utils.unfolding import OutMethod
+from survey_utils.table_utils.unfolding import TableShaper
 from cStringIO import StringIO
 
 

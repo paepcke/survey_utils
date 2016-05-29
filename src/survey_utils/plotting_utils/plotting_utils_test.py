@@ -11,7 +11,7 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import linkage
-from plotting_utils import fancy_dendrogram
+from survey_utils.plotting_utils.plotting_utils import fancy_dendrogram
 
 DO_DENDROGRAM = True
 

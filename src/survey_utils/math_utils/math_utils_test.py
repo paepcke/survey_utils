@@ -9,11 +9,10 @@ from unittest import skipIf
 import numpy as np
 import pandas as pn
 
-from math_utils import replaceMissingValsNparray, replaceMissingValsDataFrame
-from math_utils import replace_matches, non_matches
+from survey_utils.math_utils.math_utils import replaceMissingValsNparray, replaceMissingValsDataFrame
+from survey_utils.math_utils.math_utils import replace_matches, non_matches
 
 DO_ALL = True
-DO_DENDROGRAM = True
 
 class TestMathUtils(unittest.TestCase):
 
