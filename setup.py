@@ -14,6 +14,22 @@ def setup_module(cmd, module):
     else:
         raise ValueError("Module '%s' unknown." % module)        
 
+setup(
+    name = "survey_utils",
+    version = "0.0.3",
+    #packages = find_packages('src', include='survey_utils.plotting_utils'),
+    package_dir = {'':'src'},
+
+    # metadata for upload to PyPI
+    author = "Andreas Paepcke",
+    author_email = "paepcke@cs.stanford.edu",
+    description = "Utilities for plotting survey and other results.",
+    license = "BSD",
+    keywords = "surveys, dendrogram, clustering",
+    url = "https://github.com/paepcke/survey_utils",   # project home page, if any
+)
+
+
 if __name__ == '__main__':
     
     usage = 'python setup.py <setup-command> { table_utils | math_utils | plotting_utils}*'

@@ -23,7 +23,7 @@ setup_requirements = ['ordered-set>=2.0.1',
 
 setup(
     name = "survey_utils",
-    version = "0.0.2",
+    version = "0.0.3",
     packages = find_packages('src', include='survey_utils.plotting_utils'),
     package_dir = {'':'src'},
 

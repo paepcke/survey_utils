@@ -20,7 +20,7 @@ setup_requirements = []
 
 setup(
     name = "survey_utils",
-    version = "0.0.2",
+    version = "0.0.3",
     packages = find_packages('src', include='survey_utils.math_utils'),
     package_dir = {'':'src'},
 
