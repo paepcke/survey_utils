@@ -191,6 +191,36 @@ def replaceMissingValsDataFrame(nxmDataFrame,
         
     return(nxmDataFrame)
 
+#-------------------------
+# get_closest
+#----------------- 
+
+def get_nearest(ssorted, num, pick='larger'):
+    '''
+    Given a *sorted* pandas series, and a number N, return
+    the number closest to N in the series.
+    
+    :param ssorted: sorted Pandas Series instance of numbers
+    :type ssorted: pandas.Series
+    :param num: number to which closes series member is to be found.
+    :type num: { float | int }
+    :param pick: either 'smaller' or 'larger' to indicate whether the
+        smaller or larger number in the series is to be found. Default
+        is 'larger'
+    :type pick: str
+    '''
+    indx = ssorted.searchsorted(num)
+    # Exact hit?
+    if ssorted[indx].iloc[0] == num:
+        return num
+    if indx == 0:
+        return ssorted.iloc[0]
+    elif indx == len(ssorted):
+        return ssorted.iloc[-1]
+    else:
+        return ssorted[indx].iloc[0] if pick == 'larger' else ssorted[indx-1].iloc[0]
+
+
 # ----------------------------- Private Utility Functions -------------
         
 #-------------------------
@@ -260,4 +290,20 @@ def replace_matches(arr, old_val, new_val):
         arr[np.isposinf(arr)] = new_val
         return arr
 
+
+
+#-------------------------
+# perc_eq_val 
+#----------------- 
+
+def perc_eq_val(series, val):
+    '''
+    Return percentage of <val> in <series>
     
+    :param series: series to examine
+    :type series: pandas.Series
+    :param val: value to be counted
+    :type val: <any>
+    '''
+  
+    return(100*series[series==val].count()/len(series))

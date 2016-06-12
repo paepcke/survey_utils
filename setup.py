@@ -17,7 +17,7 @@ def setup_module(cmd, module):
 
 setup(
     name = "survey_utils",
-    version = "0.0.4",
+    version = "0.0.5",
     package_dir = {'':'src'},
 
     # metadata for upload to PyPI

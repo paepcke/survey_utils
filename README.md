@@ -198,9 +198,7 @@ In addtion to `replaceMissingValsNparray()`, which works on numpy.ndarray struct
 
 ####Dendrograms
 
-Function `fancy_dendrogram()` displays hierarchical clusters
-in visual form. The function is from [a dendrogram tutorial](https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/)
-with some additional documentation in the code header.
+Function `fancy_dendrogram()` displays hierarchical clusters in visual form. The function is from [a dendrogram tutorial](https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/) with some additional documentation in the code header.
 
 Here is how to use the facility.
 ```
@@ -212,7 +210,7 @@ def test_fancy_dendrogram(self):
     np.random.seed(4711)  # for repeatability of this tutorial
     a = np.random.multivariate_normal([10, 0], [[3, 1], [1, 4]], size=[100,])
     b = np.random.multivariate_normal([0, 20], [[3, 1], [1, 4]], size=[50,])
-    X = np.concatenate((a, b),)        
+    X = np.concatenate((a, b),)
 
     # generate the linkage matrix
     Z = linkage(X, 'ward')
@@ -229,7 +227,6 @@ def test_fancy_dendrogram(self):
 
     plt.show()
 ```
-	
 ![Example dendrogram](http://infolab.stanford.edu/~paepcke/shared-documents/dendrogram.png "Example dendrogram")
 
 #### Installation
