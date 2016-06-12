@@ -9,7 +9,6 @@ from unittest import skipIf
 import numpy as np
 import pandas as pn
 
-import survey_utils.math_utils
 from survey_utils.math_utils.math_utils import replaceMissingValsNparray, replaceMissingValsDataFrame
 from survey_utils.math_utils.math_utils import replace_matches, non_matches
 from survey_utils.math_utils import math_utils
@@ -181,13 +180,13 @@ class TestMathUtils(unittest.TestCase):
     @skipIf(DO_ALL != True, 'skip this one.')
     def test_get_nearest(self):
         rev = pn.Series([0,390.40,725.134,830.0])
-        self.assertEqual(390.4,math_utils.get_nearest(rev, 11))
-        self.assertEqual(0, math_utils.get_nearest(rev, 11, pick='smaller'))
-        self.assertEqual(0, math_utils.get_nearest(rev, 0))
-        self.assertEqual(830.0, math_utils.get_nearest(rev, 840))
-        self.assertEqual(390.4, math_utils.get_nearest(rev, 390.4))
-        self.assertEqual(390.4, math_utils.get_nearest(rev, 390.4, pick='larger'))
-        self.assertEqual(390.4, math_utils.get_nearest(rev, 390.4, pick='smaller'))                                
+        self.assertEqual((390.4,1),math_utils.get_nearest(rev, 11))
+        self.assertEqual((0,0), math_utils.get_nearest(rev, 11, pick='smaller'))
+        self.assertEqual((0,0), math_utils.get_nearest(rev, 0))
+        self.assertEqual((830.0, 3), math_utils.get_nearest(rev, 840))
+        self.assertEqual((390.4,1), math_utils.get_nearest(rev, 390.4))
+        self.assertEqual((390.4,1), math_utils.get_nearest(rev, 390.4, pick='larger'))
+        self.assertEqual((390.4,1), math_utils.get_nearest(rev, 390.4, pick='smaller'))                                
         
     #---------------------------- Main ----------------
             

@@ -197,8 +197,8 @@ def replaceMissingValsDataFrame(nxmDataFrame,
 
 def get_nearest(ssorted, num, pick='larger'):
     '''
-    Given a *sorted* pandas series, and a number N, return
-    the number closest to N in the series.
+    Given an ascendingly *sorted* pandas series, and a number N, return
+    the number closest to N in the series, and its index.
     
     :param ssorted: sorted Pandas Series instance of numbers
     :type ssorted: pandas.Series
@@ -208,17 +208,20 @@ def get_nearest(ssorted, num, pick='larger'):
         smaller or larger number in the series is to be found. Default
         is 'larger'
     :type pick: str
+    :return tuple of nearest number, and its index in the series.
+    :rtype (float, int)
     '''
     indx = ssorted.searchsorted(num)
     # Exact hit?
     if ssorted[indx].iloc[0] == num:
-        return num
+        return (num, indx[0])
     if indx == 0:
-        return ssorted.iloc[0]
+        return (ssorted.iloc[0], indx[0])
     elif indx == len(ssorted):
-        return ssorted.iloc[-1]
+        return (ssorted.iloc[-1], indx[0]-1)
     else:
-        return ssorted[indx].iloc[0] if pick == 'larger' else ssorted[indx-1].iloc[0]
+        indx = indx if pick == 'larger' else indx-1
+        return (ssorted[indx].iloc[0], indx[0])
 
 
 # ----------------------------- Private Utility Functions -------------
